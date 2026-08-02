@@ -1,0 +1,53 @@
+<div id="Reshet13ConfigPage"
+     data-role="page"
+     class="page type-interior pluginConfigurationPage"
+     data-require="emby-input,emby-button,emby-checkbox"
+     data-controller="__plugin/configPage.js">
+  <div data-role="content">
+    <div class="content-primary">
+      <form id="Reshet13ConfigForm">
+        <div class="verticalSection">
+          <h2 class="sectionTitle">Reshet 13</h2>
+
+          <div class="checkboxContainer checkboxContainer-withDescription">
+            <label class="emby-checkbox-label">
+              <input id="IsEnabled" type="checkbox" is="emby-checkbox" />
+              <span>Enable the Reshet 13 channel</span>
+            </label>
+            <div class="fieldDescription checkboxFieldDescription">
+              Displays the public Reshet 13 catalog under Jellyfin Channels.
+              The streams are geo restricted to Israel.
+            </div>
+          </div>
+
+          <div class="inputContainer">
+            <label class="inputLabel inputLabelUnfocused" for="Catalogs">Catalog pages</label>
+            <textarea id="Catalogs" is="emby-textarea" rows="4" class="emby-textarea"></textarea>
+            <div class="fieldDescription">
+              One <code>Name|URL</code> pair per line. Each becomes a folder in the channel.
+            </div>
+          </div>
+
+          <div class="inputContainer">
+            <label class="inputLabel inputLabelUnfocused" for="MaximumSeries">Maximum series</label>
+            <input id="MaximumSeries" type="number" min="1" max="5000" is="emby-input" />
+          </div>
+
+          <div class="inputContainer">
+            <label class="inputLabel inputLabelUnfocused" for="CacheMinutes">Cache duration in minutes</label>
+            <input id="CacheMinutes" type="number" min="1" max="10080" is="emby-input" />
+          </div>
+
+          <div class="inputContainer">
+            <label class="inputLabel inputLabelUnfocused" for="UserAgent">HTTP user agent</label>
+            <input id="UserAgent" type="text" is="emby-input" />
+          </div>
+
+          <button is="emby-button" type="submit" class="raised button-submit block">
+            <span>Save</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

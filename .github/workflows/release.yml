@@ -1,0 +1,161 @@
+name: Publish Jellyfin Reshet 13
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Four-part plugin version, for example 0.1.0.0
+        required: true
+        default: 0.1.0.0
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Resolve version
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
+
+          if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Version must contain four numeric components." >&2
+            exit 1
+          fi
+
+          echo "VERSION=${VERSION}" >> "${GITHUB_ENV}"
+
+      - name: Restore
+        run: dotnet restore Jellyfin.Plugin.Reshet13/Jellyfin.Plugin.Reshet13.csproj
+
+      - name: Build
+        run: >
+          dotnet build
+          Jellyfin.Plugin.Reshet13/Jellyfin.Plugin.Reshet13.csproj
+          --configuration Release
+          --no-restore
+          -p:Version="${VERSION}"
+          -p:AssemblyVersion="${VERSION}"
+          -p:FileVersion="${VERSION}"
+
+      - name: Package plugin
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release/Jellyfin.Plugin.Reshet13
+          cp \
+            Jellyfin.Plugin.Reshet13/bin/Release/net9.0/Jellyfin.Plugin.Reshet13.dll \
+            release/Jellyfin.Plugin.Reshet13/
+          cd release
+          zip -r "Jellyfin.Plugin.Reshet13_${VERSION}.zip" Jellyfin.Plugin.Reshet13
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Jellyfin Reshet 13 ${{ env.VERSION }}
+          body: |
+            Reshet 13 series channel plugin for Jellyfin 10.11.x.
+
+            The plugin displays Reshet 13 series, seasons and episodes with
+            remote artwork, metadata and direct HLS playback.
+          files: release/Jellyfin.Plugin.Reshet13_${{ env.VERSION }}.zip
+
+      - name: Generate Jellyfin repository manifest
+        shell: bash
+        env:
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          version = os.environ["VERSION"]
+          repository = os.environ["REPOSITORY"]
+          archive = Path(
+              f"release/Jellyfin.Plugin.Reshet13_{version}.zip"
+          )
+          checksum = hashlib.md5(archive.read_bytes()).hexdigest()
+
+          manifest = [
+              {
+                  "guid": "13c0a101-6f42-4a8e-9d21-5b7c8e4f2a63",
+                  "name": "Reshet 13",
+                  "description": (
+                      "Reshet 13 series, seasons and episodes for Jellyfin."
+                  ),
+                  "overview": (
+                      "Streams the public Reshet 13 catalog with Hebrew "
+                      "metadata and artwork."
+                  ),
+                  "owner": "OmriiB",
+                  "category": "Channels",
+                  "versions": [
+                      {
+                          "version": version,
+                          "changelog": (
+                              "Reshet 13 catalog, seasons, episodes, "
+                              "metadata, artwork and direct HLS playback."
+                          ),
+                          "targetAbi": "10.11.0.0",
+                          "sourceUrl": (
+                              f"https://github.com/{repository}/releases/"
+                              f"download/v{version}/"
+                              f"Jellyfin.Plugin.Reshet13_{version}.zip"
+                          ),
+                          "checksum": checksum,
+                          "timestamp": datetime.now(timezone.utc).strftime(
+                              "%Y-%m-%dT%H:%M:%SZ"
+                          ),
+                      }
+                  ],
+              }
+          ]
+
+          Path("manifest.json").write_text(
+              json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          PY
+
+      - name: Publish manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+          git add manifest.json
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m \
+            "chore: publish Jellyfin Reshet 13 ${VERSION} manifest"
+          DEFAULT_BRANCH="$(
+            git remote show origin |
+            sed -n '/HEAD branch/s/.*: //p'
+          )"
+          git push origin "HEAD:${DEFAULT_BRANCH}"

@@ -1,0 +1,11 @@
+[
+  {
+    "guid": "13c0a101-6f42-4a8e-9d21-5b7c8e4f2a63",
+    "name": "Reshet 13",
+    "description": "Reshet 13 series, seasons and episodes for Jellyfin.",
+    "overview": "Streams the public Reshet 13 catalog with Hebrew metadata and artwork.",
+    "owner": "OmriiB",
+    "category": "Channels",
+    "versions": []
+  }
+]
