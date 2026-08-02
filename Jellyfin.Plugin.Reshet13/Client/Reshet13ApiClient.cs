@@ -61,7 +61,7 @@ public sealed partial class Reshet13ApiClient : IReshet13ApiClient
                 continue;
             }
 
-            string? url = FindPagePath(asset, catalog.Url);
+            string? url = FindPagePath(asset);
             string? title = GetText(asset, "name");
 
             if (url is null || string.IsNullOrWhiteSpace(title))
@@ -119,7 +119,7 @@ public sealed partial class Reshet13ApiClient : IReshet13ApiClient
                 continue;
             }
 
-            string? url = FindPagePath(asset, series.Url);
+            string? url = FindPagePath(asset);
             string? title = GetText(asset, "name");
 
             if (url is null || string.IsNullOrWhiteSpace(title))
@@ -342,7 +342,7 @@ public sealed partial class Reshet13ApiClient : IReshet13ApiClient
     /// The field holding the path differs per rail template, so every string in the
     /// asset is checked for a site path instead of trusting one field name.
     /// </remarks>
-    private static string? FindPagePath(JsonElement asset, string pageUrl)
+    private static string? FindPagePath(JsonElement asset)
     {
         foreach (string candidate in Strings(asset, 0))
         {
