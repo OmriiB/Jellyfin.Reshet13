@@ -29,9 +29,15 @@ public sealed class PluginConfiguration : BasePluginConfiguration
     /// <summary>
     /// Gets or sets the HTTP user agent used for Reshet 13 requests.
     /// </summary>
+    /// <remarks>
+    /// The site rejects a request whose user agent claims to be a browser but
+    /// whose connection does not behave like one: a Chrome user agent sent over
+    /// HTTP/1.1 is answered with 403 while an honest one is served normally.
+    /// Identifying the plugin truthfully is therefore both correct and what
+    /// keeps it working.
+    /// </remarks>
     public string UserAgent { get; set; } =
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-        "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+        "Jellyfin-Reshet13/1.0 (+https://github.com/OmriiB/Jellyfin.Reshet13)";
 
     /// <summary>
     /// Gets or sets the number of minutes catalog pages remain cached.

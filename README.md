@@ -63,6 +63,27 @@ https://reshet.g-mana.live/media/<uuid>/mainManifest.m3u8
 The manifest is served without DRM, without an entitlement token and without a
 session, so Jellyfin plays it directly.
 
+### Why the plugin does not pretend to be a browser
+
+The site runs bot detection that checks whether a request is internally
+consistent, and a user agent naming a browser is held to that browser's
+behaviour. Measured against `13tv.co.il/allshows/` from the same host:
+
+| User agent | HTTP version | Response |
+| --- | --- | --- |
+| Chrome | 1.1 | 403 |
+| Chrome | 2 | 200 |
+| `Jellyfin-Reshet13/1.0` | 1.1 | 200 |
+| none | 1.1 | 200 |
+
+A Chrome user agent over HTTP/1.1 is rejected because a real Chrome would have
+negotiated HTTP/2. `HttpClient` sends HTTP/1.1 by default, so a plugin copying a
+browser user agent is blocked while an honest one is served normally.
+
+The plugin therefore identifies itself truthfully and additionally requests
+HTTP/2, which keeps an older configuration that still holds a browser user agent
+working.
+
 ### Notes on robustness
 
 Because the page ships its own data, this plugin does not depend on CSS classes

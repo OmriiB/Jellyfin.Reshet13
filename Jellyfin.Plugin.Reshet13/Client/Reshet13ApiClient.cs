@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -203,6 +204,13 @@ public sealed partial class Reshet13ApiClient : IReshet13ApiClient
         try
         {
             using HttpRequestMessage request = new(HttpMethod.Get, url);
+
+            // The site answers a browser user agent sent over HTTP/1.1 with 403,
+            // because a real browser of that name would have negotiated HTTP/2.
+            // Preferring HTTP/2 keeps an existing configuration that still holds a
+            // browser user agent working, and falls back when the server declines.
+            request.Version = HttpVersion.Version20;
+            request.VersionPolicy = HttpVersionPolicy.RequestVersionOrLower;
 
             string userAgent = Plugin.Instance.Configuration.UserAgent;
             if (!string.IsNullOrWhiteSpace(userAgent))
